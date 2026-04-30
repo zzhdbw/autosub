@@ -1,9 +1,9 @@
-import json
 import os
 from pathlib import Path
 
 from loguru import logger
 
+from base import BaseTranslator
 
 DEFAULT_PROMPT_TEMPLATE = (
     "将以下文本翻译为中文，注意只需要输出翻译后的结果，不要额外解释：\n\n{text}"
@@ -14,7 +14,7 @@ DEFAULT_TOP_P = 0.6
 DEFAULT_REPETITION_PENALTY = 1.05
 
 
-class LlamaCppTranslator:
+class LlamaCppTranslator(BaseTranslator):
     """Japanese-to-Chinese translation via llama.cpp (GGUF).
 
     Uses the GGUF model's native tokenizer — no HuggingFace Transformers dependency.
@@ -73,29 +73,6 @@ class LlamaCppTranslator:
         )
         raw = result["choices"][0]["text"].strip()
         return raw if raw else text
-
-    def translate_segments(
-        self, segments: list[dict], output_path: str | None = None
-    ) -> list[dict]:
-        """Translate all segments, optionally save to JSON, return enriched list."""
-        translated: list[dict] = []
-        for idx, seg in enumerate(segments, 1):
-            result = self.translate(seg["text"])
-            logger.info(
-                "[{}/{}] 日: {} → 中: {}",
-                idx, len(segments), seg["text"], result,
-            )
-            translated.append({**seg, "translation": result})
-
-        if output_path:
-            out = Path(output_path)
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(
-                json.dumps(translated, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-
-        return translated
 
 
 def _resolve_gguf(path: str) -> str:

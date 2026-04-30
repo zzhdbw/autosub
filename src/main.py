@@ -7,10 +7,10 @@ from loguru import logger
 
 from audio_extractor import extract_audio
 from llamacpp_translator import LlamaCppTranslator
-from speech_recognizer import SpeechRecognizer
+from speech_recognizer import FunasrASR
 from subtitle_generator import generate_srt
-from translator import Translator
-from vad_detector import VADDetector
+from translator import TransformersTranslator
+from vad_detector import SileroVAD
 
 
 def setup_logging(verbose: bool) -> None:
@@ -156,7 +156,7 @@ def main() -> None:
         logger.info("  (--skip-vad: loading existing VAD segments)")
         vad_segments = json.loads(Path(vad_json).read_text(encoding="utf-8"))
     else:
-        detector = VADDetector(
+        detector = SileroVAD(
             device=args.device,
             model_dir=str(model_dir),
         )
@@ -170,7 +170,7 @@ def main() -> None:
         logger.info("  (--skip-asr: loading existing segments)")
         segments = json.loads(Path(segments_json).read_text(encoding="utf-8"))
     else:
-        recognizer = SpeechRecognizer(
+        recognizer = FunasrASR(
             device=args.device,
             model_dir=str(model_dir),
         )
@@ -205,7 +205,7 @@ def main() -> None:
         )
     else:
         logger.info("Step 4/4: Translating (HY-MT1.5-1.8B / Transformers) …")
-        translator = Translator(
+        translator = TransformersTranslator(
             device=args.device,
             model_dir=str(model_dir),
             prompt_template=args.prompt_template,

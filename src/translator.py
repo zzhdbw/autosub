@@ -1,11 +1,9 @@
-import json
-from pathlib import Path
-
 import torch
 from loguru import logger
 from modelscope.hub.snapshot_download import snapshot_download
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 
+from base import BaseTranslator
 
 DEFAULT_PROMPT_TEMPLATE = (
     "将以下文本翻译为中文，注意只需要输出翻译后的结果，不要额外解释：\n\n{text}"
@@ -16,8 +14,8 @@ DEFAULT_TOP_P = 0.6
 DEFAULT_REPETITION_PENALTY = 1.05
 
 
-class Translator:
-    """Japanese-to-Chinese translation via HY-MT1.5-1.8B.
+class TransformersTranslator(BaseTranslator):
+    """Japanese-to-Chinese translation via HY-MT1.5-1.8B (Transformers).
 
     Prompt format and inference parameters follow the official HY-MT1.5 recommendations.
     """
@@ -93,26 +91,3 @@ class Translator:
             translation = raw.strip()
 
         return translation if translation else text
-
-    def translate_segments(
-        self, segments: list[dict], output_path: str | None = None
-    ) -> list[dict]:
-        """Translate all segments, optionally save to JSON, return enriched list."""
-        translated: list[dict] = []
-        for idx, seg in enumerate(segments, 1):
-            result = self.translate(seg["text"])
-            logger.info("[{}/{}] 日: {} → 中: {}", idx, len(segments), seg["text"], result)
-            translated.append({
-                **seg,
-                "translation": result,
-            })
-
-        if output_path:
-            out = Path(output_path)
-            out.parent.mkdir(parents=True, exist_ok=True)
-            out.write_text(
-                json.dumps(translated, ensure_ascii=False, indent=2),
-                encoding="utf-8",
-            )
-
-        return translated

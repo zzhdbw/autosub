@@ -1,10 +1,10 @@
-import json
 import re
-from pathlib import Path
 
 import numpy as np
 import soundfile as sf
 from funasr import AutoModel
+
+from base import BaseASR
 
 
 def _clean_text(text: str) -> str:
@@ -12,8 +12,8 @@ def _clean_text(text: str) -> str:
     return re.sub(r"<\|[^|]+\|>", "", text).strip()
 
 
-class SpeechRecognizer:
-    """Japanese ASR with SenseVoiceSmall."""
+class FunasrASR(BaseASR):
+    """Japanese ASR with SenseVoiceSmall via FunASR."""
 
     def __init__(
         self,
@@ -112,24 +112,4 @@ class SpeechRecognizer:
                     "text": text,
                 })
 
-        return segments
-
-    def recognize_and_save(
-        self,
-        audio_path: str,
-        output_path: str,
-        chunk_duration_ms: int = 10000,
-        vad_segments: list[dict] | None = None,
-    ) -> list[dict]:
-        """Run ASR and dump segments to JSON, return them."""
-        segments = self.recognize(
-            audio_path,
-            chunk_duration_ms=chunk_duration_ms,
-            vad_segments=vad_segments,
-        )
-        out = Path(output_path)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(
-            json.dumps(segments, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
         return segments

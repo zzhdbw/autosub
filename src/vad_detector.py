@@ -1,11 +1,10 @@
-import json
-from pathlib import Path
-
 import soundfile as sf
 from silero_vad import get_speech_timestamps, load_silero_vad
 
+from base import BaseVAD
 
-class VADDetector:
+
+class SileroVAD(BaseVAD):
     """Voice Activity Detection using Silero VAD (language-agnostic)."""
 
     def __init__(
@@ -36,16 +35,4 @@ class VADDetector:
             for t in timestamps
             if (t["end"] - t["start"]) * 1000 >= min_duration_ms
         ]
-        return segments
-
-    def detect_and_save(
-        self, audio_path: str, output_path: str, min_duration_ms: int = 1000,
-    ) -> list[dict]:
-        """Run VAD and dump segments to JSON, return them."""
-        segments = self.detect(audio_path, min_duration_ms=min_duration_ms)
-        out = Path(output_path)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(
-            json.dumps(segments, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
         return segments
