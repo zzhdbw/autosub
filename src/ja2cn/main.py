@@ -94,14 +94,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--backend",
-        choices=["transformers", "llamacpp"],
-        default="transformers",
-        help="Translation backend (default: transformers)",
+        choices=["llamacpp", "transformers"],
+        default="llamacpp",
+        help="Translation backend (default: llamacpp)",
     )
     parser.add_argument(
         "--gguf-model",
-        default=None,
-        help="Path to GGUF model file (required when --backend=llamacpp)",
+        default="model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf",
+        help="Path to GGUF model file (default: model/Tencent-Hunyuan/...Q4_K_M.gguf)",
     )
     parser.add_argument(
         "-v",
@@ -189,13 +189,11 @@ def main() -> None:
         return
 
     # ── Step 4: Translation ───────────────────────────────────────────
-    if args.backend == "llamacpp":
-        if not args.gguf_model:
-            logger.error("--gguf-model is required when --backend=llamacpp")
-            sys.exit(1)
-        logger.info("Step 4/4: Translating (llama.cpp / {}) …", args.gguf_model)
-        translator = LlamaCppTranslator(
-            model_path=args.gguf_model,
+    if args.backend == "transformers":
+        logger.info("Step 4/4: Translating (HY-MT1.5-1.8B / Transformers) …")
+        translator = TransformersTranslator(
+            device=args.device,
+            model_dir=str(model_dir),
             prompt_template=args.prompt_template,
             temperature=args.temperature,
             top_k=args.top_k,
@@ -203,10 +201,9 @@ def main() -> None:
             repetition_penalty=args.repetition_penalty,
         )
     else:
-        logger.info("Step 4/4: Translating (HY-MT1.5-1.8B / Transformers) …")
-        translator = TransformersTranslator(
-            device=args.device,
-            model_dir=str(model_dir),
+        logger.info("Step 4/4: Translating (llama.cpp / {}) …", args.gguf_model)
+        translator = LlamaCppTranslator(
+            model_path=args.gguf_model,
             prompt_template=args.prompt_template,
             temperature=args.temperature,
             top_k=args.top_k,

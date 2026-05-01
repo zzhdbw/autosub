@@ -88,11 +88,11 @@ ja2cn data/视频文件名.mp4 --skip-vad --skip-asr
 # 调试模式（显示 DEBUG 日志）
 ja2cn data/视频文件名.mp4 --verbose
 
-# 使用 llama.cpp 后端（GGUF，推荐 — 更快，无需 HuggingFace）
-ja2cn data/视频文件名.mp4 --backend llamacpp --gguf-model model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF
+# 使用 llama.cpp 后端（GGUF，默认 — 更快，无需 HuggingFace）
+ja2cn data/视频文件名.mp4
 
-# 也可直接指定 GGUF 文件
-ja2cn data/视频文件名.mp4 --backend llamacpp --gguf-model model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf
+# 如需 Transformers 后端
+ja2cn data/视频文件名.mp4 --backend transformers
 ```
 
 每个步骤均可独立运行，支持断点续跑。
@@ -123,8 +123,8 @@ output/
 | `--top-k` | `20` | Top-k 采样 |
 | `--top-p` | `0.6` | Top-p 采样 |
 | `--repetition-penalty` | `1.05` | 重复惩罚系数 |
-| `--backend` | `transformers` | 翻译后端：`transformers`（默认）或 `llamacpp`（GGUF） |
-| `--gguf-model` | — | GGUF 模型路径（`--backend llamacpp` 时必须） |
+| `--backend` | `llamacpp` | 翻译后端：`llamacpp`（默认）或 `transformers` |
+| `--gguf-model` | `model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf` | GGUF 模型路径 |
 | `--chunk-ms` | `10000` | ASR 分段时长（毫秒，仅无 VAD 时使用） |
 | `-v, --verbose` | — | 开启 DEBUG 级别日志 |
 | `--skip-vad` | — | 跳过 VAD（复用已有 vad.json） |
