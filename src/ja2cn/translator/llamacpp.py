@@ -42,7 +42,10 @@ class LlamaCppTranslator(BaseTranslator):
         logger.info("Loading GGUF model: {} …", resolved)
         logger.info(
             "  params: temp={}, top_k={}, top_p={}, repeat_penalty={}",
-            temperature, top_k, top_p, repetition_penalty,
+            temperature,
+            top_k,
+            top_p,
+            repetition_penalty,
         )
         from llama_cpp import Llama
 

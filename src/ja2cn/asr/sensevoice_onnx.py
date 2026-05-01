@@ -1,52 +1,47 @@
-import re
+from pathlib import Path
 
 import numpy as np
 import soundfile as sf
-from funasr import AutoModel
+from funasr_onnx import SenseVoiceSmall
+from funasr_onnx.utils.postprocess_utils import rich_transcription_postprocess
 from loguru import logger
 
 from ja2cn.core import BaseASR
+import os
 
 
-def _clean_text(text: str) -> str:
-    """Strip SenseVoice special tokens like <|ja|>, <|NEUTRAL|>, etc."""
-    return re.sub(r"<\|[^|]+\|>", "", text).strip()
+class SenseVoiceASR(BaseASR):
+    """Japanese ASR with SenseVoiceSmall via ONNX runtime.
 
-
-class FunasrASR(BaseASR):
-    """Japanese ASR with SenseVoiceSmall via FunASR."""
+    Lightweight ONNX inference — no PyTorch / ModelScope dependency at runtime.
+    """
 
     def __init__(
         self,
         device: str = "cpu",
         model_dir: str | None = None,
     ):
-        self.model = AutoModel(
-            model="iic/SenseVoiceSmall",
-            device=device,
-            model_dir=model_dir,
-            disable_update=True,
+
+        if not model_dir.exists():
+            raise FileNotFoundError(
+                f"SenseVoiceSmall ONNX model not found at {model_dir}. "
+                f"Place it there or set model_dir to the correct path."
+            )
+
+        logger.info("Loading SenseVoiceSmall ONNX from: {}", model_dir)
+        self.model = SenseVoiceSmall(
+            model_dir=str(model_dir),
+            batch_size=1,
+            quantize=True,
+            device_id="-1",  # CPU
+            intra_op_num_threads=max(os.cpu_count() or 4, 4),
         )
 
     def _run_asr(self, audio: np.ndarray, sr: int) -> str:
         """Run ASR on a single audio array, return cleaned text."""
-        result = self.model.generate(
-            input=audio,
-            fs=sr,
-            batch_size_s=0,
-            disable_progress_bar=True,
-            disable_pbar=True,  # 关闭 FunASR 推理进度条
-            disable_log=True,  # 可选：关闭 FunASR 日志
-            disable_update=True,  # 可选：禁止自动检查/更新模型
-        )
-
-        text = ""
-        if isinstance(result, list) and len(result) > 0:
-            text = _clean_text(result[0].get("text", ""))
-        elif isinstance(result, dict):
-            text = _clean_text(result.get("text", ""))
-
-        return text
+        res = self.model(audio, language="auto", textnorm="withitn")
+        text = rich_transcription_postprocess(res[0]) if res else ""
+        return text.strip()
 
     def recognize(
         self,
@@ -56,7 +51,7 @@ class FunasrASR(BaseASR):
     ) -> list[dict]:
         """Run ASR on audio.
 
-        If *vad_segments* is provided, process each VAD segment individually
+        If *vad_segments* is provided, process each VAD segment independently
         so every speech segment becomes one subtitle entry (no merging).
 
         Otherwise fall back to fixed-duration chunking (original behaviour).

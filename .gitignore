@@ -13,12 +13,14 @@ wheels/
 output/
 
 # Model files (downloaded separately)
-model/
 *.m4s
 
 data/*
-data/.gitkeep
+!data/.gitkeep
 model/*
-model/.gitkeep
+!model/download.sh
+!model/.gitkeep
+!model/silero_vad
+!model/silero_vad/silero_vad.onnx
 output/*
-output/.gitkeep
+!output/.gitkeep

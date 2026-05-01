@@ -6,7 +6,7 @@ from pathlib import Path
 from loguru import logger
 
 from ja2cn.translator import LlamaCppTranslator, TransformersTranslator
-from ja2cn.asr import FunasrASR
+from ja2cn.asr import SenseVoiceASR
 from ja2cn.utils.audio import extract_audio
 from ja2cn.utils.subtitle import generate_srt
 from ja2cn.vad import SileroVAD
@@ -100,8 +100,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--gguf-model",
-        default="model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf",
-        help="Path to GGUF model file (default: model/Tencent-Hunyuan/...Q4_K_M.gguf)",
+        default="model/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf",
+        help="Path to GGUF model file (default: model/...Q4_K_M.gguf)",
     )
     parser.add_argument(
         "-v",
@@ -169,9 +169,9 @@ def main() -> None:
         logger.info("  (--skip-asr: loading existing segments)")
         segments = json.loads(Path(segments_json).read_text(encoding="utf-8"))
     else:
-        recognizer = FunasrASR(
+        recognizer = SenseVoiceASR(
             device=args.device,
-            model_dir=str(model_dir),
+            model_dir=model_dir / "SenseVoiceSmall-onnx",
         )
         segments = recognizer.recognize_and_save(
             audio_path,

@@ -1,1 +1,1 @@
-from ja2cn.asr.funasr import FunasrASR
+from ja2cn.asr.sensevoice_onnx import SenseVoiceASR
