@@ -16,11 +16,16 @@ def extract_audio(video_path: str, output_dir: str, sample_rate: int = 16000) ->
     output_path = output_dir / f"{video_path.stem}.wav"
 
     cmd = [
-        "ffmpeg", "-i", str(video_path),
+        "ffmpeg",
+        "-i",
+        str(video_path),
         "-vn",
-        "-acodec", "pcm_s16le",
-        "-ar", str(sample_rate),
-        "-ac", "1",
+        "-acodec",
+        "pcm_s16le",
+        "-ar",
+        str(sample_rate),
+        "-ac",
+        "1",
         "-y",
         str(output_path),
     ]
