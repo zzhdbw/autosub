@@ -1,7 +1,7 @@
 import soundfile as sf
 from silero_vad import get_speech_timestamps, load_silero_vad
 
-from base import BaseVAD
+from ja2cn.core import BaseVAD
 
 
 class SileroVAD(BaseVAD):

@@ -4,7 +4,7 @@ import numpy as np
 import soundfile as sf
 from funasr import AutoModel
 
-from base import BaseASR
+from ja2cn.core import BaseASR
 
 
 def _clean_text(text: str) -> str:

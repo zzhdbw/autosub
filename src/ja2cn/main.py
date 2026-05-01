@@ -5,12 +5,11 @@ from pathlib import Path
 
 from loguru import logger
 
-from audio_extractor import extract_audio
-from llamacpp_translator import LlamaCppTranslator
-from speech_recognizer import FunasrASR
-from subtitle_generator import generate_srt
-from translator import TransformersTranslator
-from vad_detector import SileroVAD
+from ja2cn.translator import LlamaCppTranslator, TransformersTranslator
+from ja2cn.asr import FunasrASR
+from ja2cn.utils.audio import extract_audio
+from ja2cn.utils.subtitle import generate_srt
+from ja2cn.vad import SileroVAD
 
 
 def setup_logging(verbose: bool) -> None:

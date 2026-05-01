@@ -21,5 +21,8 @@ dependencies = [
 [project.optional-dependencies]
 llamacpp = ["llama-cpp-python>=0.2.0", "gguf>=0.10.0"]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [project.scripts]
-ja2cn = "main:main"
+ja2cn = "ja2cn.main:main"
