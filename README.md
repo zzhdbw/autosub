@@ -1,12 +1,12 @@
 # JA2CN — 日本语视频音频 → 中文字幕
 
-使用 FunASR（SenseVoiceSmall）对日语视频进行语音识别，通过 Silero VAD 切分语音片段，再经 HY-MT1.5-1.8B 模型翻译成中文，生成标准 `.srt` 字幕文件。
+使用 FunASR（SenseVoiceSmall）对日语视频进行语音识别，通过 Silero VAD 切分语音片段，再经 HY-MT1.5-1.8B（llama.cpp GGUF）翻译成中文，生成标准 `.srt` 字幕文件。
 
 ## 工作流程
 
 ```
-视频文件 → ffmpeg 提取音频 → Silero VAD 语音分段
-→ FunASR SenseVoiceSmall 逐段识别 → HY-MT1.5-1.8B 日译中 → SRT 字幕文件
+视频文件 → PyAV 提取音频 → Silero VAD 语音分段
+→ FunASR SenseVoiceSmall 逐段识别 → HY-MT1.5-1.8B GGUF 日译中 → SRT 字幕文件
 ```
 
 VAD（语音活动检测）确保每个语音片段独立识别，不会合并成长句字幕。
@@ -25,14 +25,11 @@ cd JA2CN
 uv venv --python 3.11
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 安装基础依赖（Transformers 后端，默认）
+# 安装依赖（llama.cpp GGUF 为默认翻译后端）
 uv --cache-dir ~/.uv/cache pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -e .
-
-# 如需 llama.cpp 后端（更快，需额外安装）
-uv --cache-dir ~/.uv/cache pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -e ".[llamacpp]"
 ```
 
-## 模型下载
+## 模型
 
 模型会自动下载到 `model/` 目录：
 
@@ -40,17 +37,10 @@ uv --cache-dir ~/.uv/cache pip install -i https://pypi.tuna.tsinghua.edu.cn/simp
 |------|------|------|
 | Silero VAD | ~2 MB | 语音活动检测（语言无关） |
 | SenseVoiceSmall | ~500 MB | 日语音声识别 |
-| HY-MT1.5-1.8B | ~3.8 GB | 日本语→中文翻译 |
+| HY-MT1.5-1.8B GGUF | ~1.1 GB | 日本语→中文翻译（默认，llama.cpp） |
+| HY-MT1.5-1.8B（Transformers） | ~3.8 GB | 日本语→中文翻译（`--backend transformers`） |
 
-首次运行时会自动下载。翻译模型较大（~3.8 GB），也可提前下载：
-
-```bash
-source .venv/bin/activate
-python -c "
-from modelscope.hub.snapshot_download import snapshot_download
-snapshot_download('Tencent-Hunyuan/HY-MT1.5-1.8B', cache_dir='model')
-"
-```
+GGUF 模型已内置在仓库 `model/` 目录下，开箱即用。如需 Transformers 后端，模型会自动下载。
 
 ## 使用
 
@@ -58,7 +48,7 @@ snapshot_download('Tencent-Hunyuan/HY-MT1.5-1.8B', cache_dir='model')
 cd JA2CN
 source .venv/bin/activate
 
-# 完整流程
+# 完整流程（默认 llama.cpp GGUF 后端）
 ja2cn data/视频文件名.mp4
 
 # 指定输出路径
@@ -75,9 +65,6 @@ ja2cn data/视频文件名.mp4 --skip-vad --skip-asr
 
 # 调试模式（显示 DEBUG 日志）
 ja2cn data/视频文件名.mp4 --verbose
-
-# 使用 llama.cpp 后端（GGUF，默认 — 更快，无需 HuggingFace）
-ja2cn data/视频文件名.mp4
 
 # 如需 Transformers 后端
 ja2cn data/视频文件名.mp4 --backend transformers
@@ -111,7 +98,7 @@ output/
 | `--top-k` | `20` | Top-k 采样 |
 | `--top-p` | `0.6` | Top-p 采样 |
 | `--repetition-penalty` | `1.05` | 重复惩罚系数 |
-| `--backend` | `llamacpp` | 翻译后端：`llamacpp`（默认）或 `transformers` |
+| `--backend` | `llamacpp` | 翻译后端：`llamacpp`（默认，GGUF 1.1 GB）或 `transformers`（3.8 GB） |
 | `--gguf-model` | `model/Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf` | GGUF 模型路径 |
 | `--chunk-ms` | `10000` | ASR 分段时长（毫秒，仅无 VAD 时使用） |
 | `-v, --verbose` | — | 开启 DEBUG 级别日志 |
@@ -121,7 +108,6 @@ output/
 
 ## 注意事项
 
-1. **首次运行需要下载模型**，请保持网络畅通
-2. **CPU 运行速度较慢**（HY-MT1.5-1.8B 为 1.8B 参数），建议预留充足时间
-3. **内存要求**：建议 ≥ 16 GB RAM
-4. **HY-MT1.5-1.8B 的 prompt 格式** 可能需要根据模型实际要求调整，通过 `--prompt-template` 参数自定义
+1. **首次运行需要下载模型**（SenseVoiceSmall ~500 MB），请保持网络畅通
+2. **llama.cpp GGUF 后端**为默认，模型已内置，开箱即用，内存要求 ~2 GB
+3. **Transformers 后端**（`--backend transformers`）模型约 3.8 GB，需要额外下载，CPU 推理较慢，内存建议 ≥ 16 GB
