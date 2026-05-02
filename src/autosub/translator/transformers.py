@@ -3,7 +3,7 @@ from loguru import logger
 from modelscope.hub.snapshot_download import snapshot_download
 from transformers import AutoModelForCausalLM, AutoModelForSeq2SeqLM, AutoTokenizer
 
-from ja2cn.core import BaseTranslator
+from autosub.core import BaseTranslator
 
 DEFAULT_PROMPT_TEMPLATE = (
     "将以下文本翻译为中文，注意只需要输出翻译后的结果，不要额外解释：\n\n{text}"

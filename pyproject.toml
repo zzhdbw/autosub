@@ -1,7 +1,7 @@
 [project]
-name = "ja2cn"
+name = "autosub"
 version = "0.1.0"
-description = "Japanese video audio to Chinese subtitles using FunASR + HY-MT"
+description = "Automatic multi-language subtitle generation"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -19,6 +19,9 @@ dependencies = [
     "onnxruntime>=1.15.0",
     "loguru>=0.7.0",
     "jieba>=0.42.1",
+    "customtkinter>=5.2.2",
+    "Pillow>=10.0.0",
+    "requests>=2.28.0",
 ]
 
 [project.optional-dependencies]
@@ -28,4 +31,5 @@ transformers = []
 where = ["src"]
 
 [project.scripts]
-ja2cn = "ja2cn.main:main"
+autosub = "autosub.main:main"
+autosub-gui = "autosub.gui:main"

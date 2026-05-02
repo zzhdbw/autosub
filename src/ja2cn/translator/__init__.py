@@ -1,2 +1,0 @@
-from ja2cn.translator.transformers import TransformersTranslator
-from ja2cn.translator.llamacpp import LlamaCppTranslator

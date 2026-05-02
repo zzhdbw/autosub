@@ -3,7 +3,7 @@ from funasr_onnx import SenseVoiceSmall
 from funasr_onnx.utils.postprocess_utils import rich_transcription_postprocess
 
 
-model_dir = "/Users/zzh/Desktop/workspace/JA2CN/model/SenseVoiceSmall-onnx"
+model_dir = str(Path(__file__).resolve().parent / "model" / "SenseVoiceSmall-onnx")
 
 model = SenseVoiceSmall(model_dir, batch_size=1, quantize=True)
 

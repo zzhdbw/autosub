@@ -5,11 +5,11 @@ from pathlib import Path
 
 from loguru import logger
 
-from ja2cn.translator import LlamaCppTranslator, TransformersTranslator
-from ja2cn.asr import SenseVoiceASR
-from ja2cn.utils.audio import extract_audio
-from ja2cn.utils.subtitle import generate_srt
-from ja2cn.vad import SileroVAD
+from autosub.translator import LlamaCppTranslator, TransformersTranslator
+from autosub.asr import SenseVoiceASR
+from autosub.utils.audio import extract_audio
+from autosub.utils.subtitle import generate_srt
+from autosub.vad import SileroVAD
 
 
 def setup_logging(verbose: bool) -> None:
@@ -28,10 +28,10 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
             "Examples:\n"
-            "  ja2cn movie.mp4                          # full pipeline\n"
-            "  ja2cn movie.mp4 --skip-vad               # re-run ASR with existing VAD\n"
-            "  ja2cn movie.mp4 --skip-vad --skip-asr    # translate only\n"
-            "  ja2cn movie.mp4 --skip-translate         # ASR-only (Japanese subs)\n"
+            "  autosub movie.mp4                          # full pipeline\n"
+            "  autosub movie.mp4 --skip-vad               # re-run ASR with existing VAD\n"
+            "  autosub movie.mp4 --skip-vad --skip-asr    # translate only\n"
+            "  autosub movie.mp4 --skip-translate         # ASR-only (Japanese subs)\n"
         ),
     )
     parser.add_argument("input", help="Input video file")

@@ -5,7 +5,7 @@ import soundfile as sf
 from silero_vad import get_speech_timestamps
 from silero_vad.utils_vad import OnnxWrapper
 
-from ja2cn.core import BaseVAD
+from autosub.core import BaseVAD
 
 
 class SileroVAD(BaseVAD):

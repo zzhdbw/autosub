@@ -3,7 +3,7 @@ from pathlib import Path
 
 from loguru import logger
 
-from ja2cn.core import BaseTranslator
+from autosub.core import BaseTranslator
 
 DEFAULT_PROMPT_TEMPLATE = (
     "将以下文本翻译为中文，注意只需要输出翻译后的结果，不要额外解释：\n\n{text}"
