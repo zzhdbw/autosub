@@ -100,8 +100,8 @@ def main() -> None:
     )
     parser.add_argument(
         "--gguf-model",
-        default="model/HY-MT1.5-1.8B-GGUF/HY-MT1.5-1.8B-Q4_K_M.gguf",
-        help="Path to GGUF model file (default: model/...Q4_K_M.gguf)",
+        default="model/Hy-MT2-1.8B-1.25Bit-GGUF/Hy-MT2-1.8B-1.25Bit.gguf",
+        help="Path to GGUF model file (default: model/...1.25Bit.gguf)",
     )
     parser.add_argument(
         "-v",
@@ -190,7 +190,7 @@ def main() -> None:
 
     # ── Step 4: Translation ───────────────────────────────────────────
     if args.backend == "transformers":
-        logger.info("Step 4/4: Translating (HY-MT1.5-1.8B / Transformers) …")
+        logger.info("Step 4/4: Translating (Transformers) …")
         translator = TransformersTranslator(
             device=args.device,
             model_dir=str(model_dir),

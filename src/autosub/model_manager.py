@@ -50,16 +50,16 @@ MODELS: dict[str, dict] = {
         "files": None,  # resolved at download time
     },
     "hy_mt": {
-        "name": "HY-MT1.5 GGUF (Translate)",
-        "description": "Japanese\u2192Chinese Translation (1.1 GB)",
-        "dest": MODEL_DIR / "HY-MT1.5-1.8B-GGUF" / "HY-MT1.5-1.8B-Q4_K_M.gguf",
+        "name": "Hy-MT2-1.8B GGUF (Translate)",
+        "description": "Japanese\u2192Chinese Translation (440 MB, STQ 1.25-bit)",
+        "dest": MODEL_DIR / "Hy-MT2-1.8B-1.25Bit-GGUF" / "Hy-MT2-1.8B-1.25Bit.gguf",
         "files": [{
             "url": _MS_URL.format(
-                model="Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF",
-                branch="main",
-                file="HY-MT1.5-1.8B-Q4_K_M.gguf",
+                model="Tencent-Hunyuan/Hy-MT2-1.8B-1.25Bit-GGUF",
+                branch="master",
+                file="Hy-MT2-1.8B-1.25Bit.gguf",
             ),
-            "dest": MODEL_DIR / "HY-MT1.5-1.8B-GGUF" / "HY-MT1.5-1.8B-Q4_K_M.gguf",
+            "dest": MODEL_DIR / "Hy-MT2-1.8B-1.25Bit-GGUF" / "Hy-MT2-1.8B-1.25Bit.gguf",
         }],
     },
 }

@@ -7,7 +7,6 @@ requires-python = ">=3.10"
 dependencies = [
     "av>=12.0.0",
     "funasr-onnx>=0.1.0",
-    "llama-cpp-python>=0.2.0",
     "transformers>=4.35.0",
     "modelscope>=1.9.0",
     "torch>=2.0.0",

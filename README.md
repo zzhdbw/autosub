@@ -6,7 +6,7 @@
 
 ```
 视频文件 → PyAV 提取音频 → Silero VAD 语音分段
-→ FunASR SenseVoiceSmall 逐段识别 → HY-MT1.5-1.8B GGUF 翻译 → SRT 字幕文件
+→ FunASR SenseVoiceSmall 逐段识别 → Hy-MT2-1.8B GGUF (STQ 1.25-bit) 翻译 → SRT 字幕文件
 ```
 
 支持日语 → 中文（可扩展其他语言）。
@@ -41,18 +41,32 @@ curl -L -o model/silero_vad/silero_vad.onnx \
 # SenseVoiceSmall ONNX（230 MB）
 modelscope download --model iic/SenseVoiceSmall-onnx --local_dir model/SenseVoiceSmall-onnx
 
-# HY-MT1.5 GGUF（1.1 GB）
-modelscope download --model Tencent-Hunyuan/HY-MT1.5-1.8B-GGUF \
-  HY-MT1.5-1.8B-Q4_K_M.gguf --local_dir model/HY-MT1.5-1.8B-GGUF
+# Hy-MT2-1.8B GGUF（440 MB）
+modelscope download --model Tencent-Hunyuan/Hy-MT2-1.8B-1.25Bit-GGUF \
+  Hy-MT2-1.8B-1.25Bit.gguf --local_dir model/Hy-MT2-1.8B-1.25Bit-GGUF
 ```
 
 **或使用 GUI：** 运行 `autosub-gui`，点击 **Models** → **Download All**。
+
+### 构建 llama.cpp（STQ 量化支持）
+
+Hy-MT2 的 1.25-bit GGUF 需要带 STQ kernel 的 llama.cpp。源码已包含在项目中 `llama.cpp_stq/`：
+
+```bash
+# 一键编译
+bash scripts/build_llama_stq.sh
+
+# 或手动操作
+cd llama.cpp_stq
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release -j $(sysctl -n hw.ncpu)
+```
 
 | 模型 | 大小 | 用途 |
 |------|------|------|
 | Silero VAD | ~2 MB | 语音活动检测 |
 | SenseVoiceSmall ONNX | ~230 MB | 语音识别 |
-| HY-MT1.5-1.8B GGUF | ~1.1 GB | 翻译（默认 llama.cpp） |
+| Hy-MT2-1.8B GGUF (STQ 1.25-bit) | ~440 MB | 翻译（默认 llama.cpp） |
 
 ## 使用
 
@@ -152,4 +166,4 @@ curl -L -o model/SenseVoiceSmall-onnx/chn_jpn_yue_eng_ko_spectok.bpe.model \
 |------|----------|
 | Silero VAD | `silero_vad.onnx` |
 | SenseVoiceSmall ONNX | `model_quant.onnx`, `chn_jpn_yue_eng_ko_spectok.bpe.model`, `am.mvn`, `config.yaml`, `tokens.json` |
-| HY-MT1.5 GGUF | `HY-MT1.5-1.8B-Q4_K_M.gguf` |
+| Hy-MT2-1.8B GGUF | `Hy-MT2-1.8B-1.25Bit.gguf` + STQ 版 llama.cpp |
