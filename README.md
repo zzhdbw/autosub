@@ -14,18 +14,22 @@
 ## 环境要求
 
 - **Python** >= 3.10
+- **CMake** >= 3.14（编译 STQ llama.cpp）
 
 ## 安装
 
 ```bash
 cd autosub
 
-# 创建虚拟环境（推荐）
+# 1. 创建虚拟环境
 uv venv --python 3.11
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 安装依赖
+# 2. 安装 Python 依赖
 pip install -e .
+
+# 3. 编译 STQ 版 llama.cpp（源码已在仓库中）
+bash scripts/build_llama_stq.sh
 ```
 
 ## 模型
@@ -47,20 +51,6 @@ modelscope download --model Tencent-Hunyuan/Hy-MT2-1.8B-1.25Bit-GGUF \
 ```
 
 **或使用 GUI：** 运行 `autosub-gui`，点击 **Models** → **Download All**。
-
-### 构建 llama.cpp（STQ 量化支持）
-
-Hy-MT2 的 1.25-bit GGUF 需要带 STQ kernel 的 llama.cpp。源码已包含在项目中 `llama.cpp_stq/`：
-
-```bash
-# 一键编译
-bash scripts/build_llama_stq.sh
-
-# 或手动操作
-cd llama.cpp_stq
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release -j $(sysctl -n hw.ncpu)
-```
 
 | 模型 | 大小 | 用途 |
 |------|------|------|
@@ -97,14 +87,6 @@ autosub-gui
 - 模型管理（一键下载）
 - 实时日志
 
-## 打包
-
-```bash
-pip install pyinstaller
-python build.py
-open dist/AutoSub.app
-```
-
 ## 输出结构
 
 ```
@@ -123,11 +105,20 @@ output/
 | `input` | (必填) | 输入视频文件 |
 | `-o, --output` | `output/<输入名>.srt` | 输出 SRT 路径 |
 | `--output-dir` | `output` | 中间文件目录 |
+| `--gguf-model` | `model/Hy-MT2-1.8B-1.25Bit-GGUF/Hy-MT2-1.8B-1.25Bit.gguf` | GGUF 模型路径 |
 | `--backend` | `llamacpp` | 翻译后端 |
 | `--skip-vad` | — | 跳过 VAD |
 | `--skip-asr` | — | 跳过 ASR |
 | `--skip-translate` | — | 跳过翻译 |
 | `-v, --verbose` | — | DEBUG 日志 |
+
+## 打包
+
+```bash
+pip install pyinstaller
+python build.py
+open dist/AutoSub.app
+```
 
 ## 常见问题
 
@@ -156,6 +147,16 @@ ls model/SenseVoiceSmall-onnx/chn_jpn_yue_eng_ko_spectok.bpe.model
 # 补下载
 curl -L -o model/SenseVoiceSmall-onnx/chn_jpn_yue_eng_ko_spectok.bpe.model \
   https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/chn_jpn_yue_eng_ko_spectok.bpe.model
+```
+
+### llama-server 启动失败
+
+```bash
+# 确认已编译
+bash scripts/build_llama_stq.sh
+
+# 检查二进制是否存在
+ls -l llama.cpp_stq/build/bin/llama-server
 ```
 
 ### 其他文件缺失
