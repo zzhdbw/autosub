@@ -114,3 +114,42 @@ output/
 | `--skip-asr` | — | 跳过 ASR |
 | `--skip-translate` | — | 跳过翻译 |
 | `-v, --verbose` | — | DEBUG 日志 |
+
+## 常见问题
+
+### ONNX 模型加载失败 / Protobuf parsing failed
+
+通常是因为模型文件下载不完整或被覆盖为 HTML 内容（例如下载时遇到 GitHub/ModelScope 重定向页面）。
+
+**Silero VAD：**
+```bash
+# 检查模型文件是否损坏
+file model/silero_vad/silero_vad.onnx
+# 应为 "data"，若显示 "HTML document" 则已损坏
+
+# 重新下载
+git restore model/silero_vad/silero_vad.onnx
+# 或手动重新下载
+curl -L -o model/silero_vad/silero_vad.onnx \
+  https://github.com/snakers4/silero-vad/raw/master/src/site-packages/silero_vad/data/silero_vad.onnx
+```
+
+**SenseVoice BPE tokenizer 缺失：**
+```bash
+# 检查 BPE 模型文件是否存在
+ls model/SenseVoiceSmall-onnx/chn_jpn_yue_eng_ko_spectok.bpe.model
+
+# 补下载
+curl -L -o model/SenseVoiceSmall-onnx/chn_jpn_yue_eng_ko_spectok.bpe.model \
+  https://modelscope.cn/models/iic/SenseVoiceSmall/resolve/master/chn_jpn_yue_eng_ko_spectok.bpe.model
+```
+
+### 其他文件缺失
+
+检查模型目录，对比以下必需文件列表：
+
+| 模型 | 必需文件 |
+|------|----------|
+| Silero VAD | `silero_vad.onnx` |
+| SenseVoiceSmall ONNX | `model_quant.onnx`, `chn_jpn_yue_eng_ko_spectok.bpe.model`, `am.mvn`, `config.yaml`, `tokens.json` |
+| HY-MT1.5 GGUF | `HY-MT1.5-1.8B-Q4_K_M.gguf` |

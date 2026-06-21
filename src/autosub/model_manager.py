@@ -70,7 +70,8 @@ def status(key: str) -> str:
     info = MODELS[key]
     if key == "sensevoice":
         d = info["dest"]
-        if d.is_dir() and (d / "model_quant.onnx").exists():
+        required = ["model_quant.onnx", "chn_jpn_yue_eng_ko_spectok.bpe.model"]
+        if d.is_dir() and all((d / f).exists() for f in required):
             return "ok"
         return "missing" if not d.exists() else "partial"
     dest = info["dest"]
