@@ -182,6 +182,10 @@ def main() -> None:
 
     logger.info("  → {} segment(s) recognised", len(segments))
 
+    # Free ASR model memory before loading the translator
+    if not args.skip_asr:
+        del recognizer
+
     if args.skip_translate:
         logger.info("  (--skip-translate: generating SRT from ASR text)")
         srt_path = generate_srt(segments, output_srt)

@@ -1,3 +1,5 @@
+import os
+
 from pathlib import Path
 
 import numpy as np
@@ -7,7 +9,6 @@ from funasr_onnx.utils.postprocess_utils import rich_transcription_postprocess
 from loguru import logger
 
 from autosub.core import BaseASR
-import os
 
 
 class SenseVoiceASR(BaseASR):
@@ -21,7 +22,6 @@ class SenseVoiceASR(BaseASR):
         device: str = "cpu",
         model_dir: str | None = None,
     ):
-
         if not model_dir.exists():
             raise FileNotFoundError(
                 f"SenseVoiceSmall ONNX model not found at {model_dir}. "
