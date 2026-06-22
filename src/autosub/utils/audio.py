@@ -8,20 +8,20 @@ from loguru import logger
 
 def extract_audio(video_path: str, output_dir: str, sample_rate: int = 16000) -> str:
     """Extract audio from video as 16 kHz mono WAV via PyAV."""
-    video_path = Path(video_path)
-    if not video_path.exists():
+    vp = Path(video_path)
+    if not vp.exists():
         raise FileNotFoundError(f"Video file not found: {video_path}")
 
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    output_path = output_dir / f"{video_path.stem}.wav"
+    od = Path(output_dir)
+    od.mkdir(parents=True, exist_ok=True)
+    output_path = od / f"{vp.stem}.wav"
 
-    container = av.open(str(video_path))
+    container = av.open(str(vp))
 
     audio_stream = next((s for s in container.streams if s.type == "audio"), None)
     if audio_stream is None:
         container.close()
-        raise ValueError(f"No audio stream found in {video_path}")
+        raise ValueError(f"No audio stream found in {vp}")
 
     resampler = av.AudioResampler(
         format="s16p",

@@ -5,8 +5,8 @@ from pathlib import Path
 
 from loguru import logger
 
-from autosub.translator import LlamaCppTranslator, TransformersTranslator
 from autosub.asr import SenseVoiceASR
+from autosub.translator import LlamaCppTranslator, TransformersTranslator
 from autosub.utils.audio import extract_audio
 from autosub.utils.subtitle import generate_srt
 from autosub.vad import SileroVAD
@@ -171,7 +171,7 @@ def main() -> None:
     else:
         recognizer = SenseVoiceASR(
             device=args.device,
-            model_dir=model_dir / "SenseVoiceSmall-onnx",
+            model_dir=str(model_dir / "SenseVoiceSmall-onnx"),
         )
         segments = recognizer.recognize_and_save(
             audio_path,
@@ -193,6 +193,7 @@ def main() -> None:
         return
 
     # ── Step 4: Translation ───────────────────────────────────────────
+    translator: LlamaCppTranslator | TransformersTranslator
     if args.backend == "transformers":
         logger.info("Step 4/4: Translating (Transformers) …")
         translator = TransformersTranslator(

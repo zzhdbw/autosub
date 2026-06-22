@@ -46,9 +46,7 @@ class TransformersTranslator(BaseTranslator):
         model_path = snapshot_download(model_name, cache_dir=model_dir)
 
         logger.info("Loading tokenizer …")
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path, trust_remote_code=True
-        )
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.eos_token
 
@@ -56,7 +54,7 @@ class TransformersTranslator(BaseTranslator):
         try:
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_path, torch_dtype=torch.float32, trust_remote_code=True
-            ).to(device)
+            ).to(device)  # type: ignore[arg-type]
             self._is_causal = True
         except Exception:
             self.model = AutoModelForSeq2SeqLM.from_pretrained(
@@ -85,9 +83,10 @@ class TransformersTranslator(BaseTranslator):
 
         raw = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-        if self._is_causal:
-            translation = raw[len(prompt):].strip()
-        else:
-            translation = raw.strip()
+        translation = (
+            raw[len(prompt) :].strip()  # type: ignore[union-attr]
+            if self._is_causal
+            else raw.strip()  # type: ignore[union-attr]
+        )
 
         return translation if translation else text

@@ -6,8 +6,8 @@ from pathlib import Path
 
 from loguru import logger
 
-
 # ── VAD ─────────────────────────────────────────────────────────────────
+
 
 class BaseVAD(ABC):
     """Voice Activity Detection base class."""
@@ -17,9 +17,7 @@ class BaseVAD(ABC):
         """Run VAD on *audio_path*, return ``[{start, end}, …]`` in milliseconds."""
         ...
 
-    def detect_and_save(
-        self, audio_path: str, output_path: str, **kwargs
-    ) -> list[dict]:
+    def detect_and_save(self, audio_path: str, output_path: str, **kwargs) -> list[dict]:
         """Run VAD and dump segments to JSON, return them."""
         segments = self.detect(audio_path, **kwargs)
         _write_json(output_path, segments)
@@ -27,6 +25,7 @@ class BaseVAD(ABC):
 
 
 # ── ASR ─────────────────────────────────────────────────────────────────
+
 
 class BaseASR(ABC):
     """Speech Recognition base class."""
@@ -36,9 +35,7 @@ class BaseASR(ABC):
         """Run ASR on *audio_path*, return ``[{start, end, text}, …]`` in ms."""
         ...
 
-    def recognize_and_save(
-        self, audio_path: str, output_path: str, **kwargs
-    ) -> list[dict]:
+    def recognize_and_save(self, audio_path: str, output_path: str, **kwargs) -> list[dict]:
         """Run ASR and dump segments to JSON, return them."""
         segments = self.recognize(audio_path, **kwargs)
         _write_json(output_path, segments)
@@ -46,6 +43,7 @@ class BaseASR(ABC):
 
 
 # ── Translator ──────────────────────────────────────────────────────────
+
 
 class BaseTranslator(ABC):
     """Translation base class."""
@@ -64,7 +62,10 @@ class BaseTranslator(ABC):
             result = self.translate(seg["text"])
             logger.info(
                 "[{}/{}] 日: {} → 中: {}",
-                idx, len(segments), seg["text"], result,
+                idx,
+                len(segments),
+                seg["text"],
+                result,
             )
             translated.append({**seg, "translation": result})
 
@@ -75,6 +76,7 @@ class BaseTranslator(ABC):
 
 
 # ── shared helpers ──────────────────────────────────────────────────────
+
 
 def _write_json(path: str, data: list) -> None:
     out = Path(path)

@@ -29,10 +29,13 @@ class SileroVAD(BaseVAD):
         candidate = Path(model_dir) / "silero_vad" / "silero_vad.onnx"
         if candidate.exists():
             return candidate
-        return resources.files("silero_vad.data").joinpath("silero_vad.onnx")
+        return Path(str(resources.files("silero_vad.data").joinpath("silero_vad.onnx")))
 
     def detect(
-        self, audio_path: str, min_duration_ms: int = 1000,
+        self,
+        audio_path: str,
+        min_duration_ms: int = 1000,
+        **kwargs,
     ) -> list[dict]:
         """Run VAD on audio file, return list of {start_ms, end_ms} segments.
 
@@ -43,7 +46,9 @@ class SileroVAD(BaseVAD):
             audio = audio.mean(axis=1)
 
         timestamps = get_speech_timestamps(
-            audio, self.model, sampling_rate=sr,
+            audio,
+            self.model,
+            sampling_rate=sr,
             return_seconds=True,
         )
 

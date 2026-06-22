@@ -4,6 +4,20 @@ version = "0.1.0"
 description = "Automatic multi-language subtitle generation"
 readme = "README.md"
 requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "Zhihao Zhang"}]
+keywords = ["subtitle", "asr", "vad", "translation", "japanese", "chinese"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Multimedia :: Video",
+]
 dependencies = [
     "av>=12.0.0",
     "funasr-onnx>=0.1.0",
@@ -25,10 +39,80 @@ dependencies = [
 
 [project.optional-dependencies]
 transformers = []
+dev = [
+    "mypy>=1.0",
+    "ruff>=0.11",
+    "bandit>=1.7",
+    "pre-commit>=3.5",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+]
 
-[tool.setuptools.packages.find]
-where = ["src"]
+[project.urls]
+Homepage = "https://github.com/ZhihaoZhang/autosub"
+Repository = "https://github.com/ZhihaoZhang/autosub"
 
 [project.scripts]
 autosub = "autosub.main:main"
 autosub-gui = "autosub.gui:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# ── Ruff ──────────────────────────────────────────────────────────────
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "F",     # pyflakes
+    "E",     # pycodestyle errors
+    "W",     # pycodestyle warnings
+    "I",     # isort
+    "UP",    # pyupgrade
+    "B",     # flake8-bugbear
+    "A",     # flake8-builtins
+    "C4",    # flake8-comprehensions
+    "SIM",   # flake8-simplify
+    "T20",   # flake8-print (allow in main/gui)
+    "RUF",   # ruff-specific
+]
+ignore = [
+    "E501",   # line too long — handled by formatter
+    "B008",   # do not perform function calls in defaults — fine for CLI
+    "T201",   # print allowed in CLI/GUI
+    "T203",   # pprint allowed
+    "RUF001",  # ambiguous fullwidth chars — Japanese/Chinese in strings
+]
+isort = {known-first-party = ["autosub"]}
+
+[tool.ruff.lint.per-file-ignores]
+"src/autosub/gui.py" = ["A002"]  # `id` is fine as loop var in GUI context
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ── MyPy ──────────────────────────────────────────────────────────────
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+exclude = ["llama.cpp_stq/"]
+
+# ── Pytest ────────────────────────────────────────────────────────────
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["-v", "--tb=short", "--strict-markers"]
+
+# ── Bandit ────────────────────────────────────────────────────────────
+
+[tool.bandit]
+exclude_dirs = [".venv", "llama.cpp_stq", "build", "dist", "tests"]
+skips = ["B404", "B603", "B607", "B310", "B615"]

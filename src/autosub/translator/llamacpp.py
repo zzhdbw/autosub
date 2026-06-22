@@ -1,10 +1,9 @@
 import json
-import os
 import subprocess
 import time
 from pathlib import Path
-from urllib.request import Request, urlopen
 from urllib.error import URLError
+from urllib.request import Request, urlopen
 
 from loguru import logger
 
@@ -80,9 +79,12 @@ class LlamaCppTranslator(BaseTranslator):
         self._server = subprocess.Popen(
             [
                 str(server_bin),
-                "-m", self.model_path,
-                "-ngl", "0",
-                "--port", str(_SERVER_PORT),
+                "-m",
+                self.model_path,
+                "-ngl",
+                "0",
+                "--port",
+                str(_SERVER_PORT),
             ],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
@@ -112,29 +114,24 @@ class LlamaCppTranslator(BaseTranslator):
             except URLError:
                 pass
             time.sleep(0.5)
-        raise RuntimeError(
-            f"llama-server did not start within {timeout}s"
-        )
+        raise RuntimeError(f"llama-server did not start within {timeout}s")
 
     def translate(self, text: str) -> str:
         """Translate a single string to Chinese via llama-server HTTP API."""
         prompt = self.prompt_template.format(text=text)
-        full_prompt = (
-            "<｜hy_begin▁of▁sentence｜>"
-            "<｜hy_User｜>"
-            f"{prompt}"
-            "<｜hy_Assistant｜>"
-        )
+        full_prompt = f"<｜hy_begin▁of▁sentence｜><｜hy_User｜>{prompt}<｜hy_Assistant｜>"
 
-        body = json.dumps({
-            "prompt": full_prompt,
-            "n_predict": 1024,
-            "temperature": self.temperature,
-            "top_k": self.top_k,
-            "top_p": self.top_p,
-            "repeat_penalty": self.repetition_penalty,
-            "stop": ["<｜hy_place▁holder▁no▁2｜>"],
-        }).encode()
+        body = json.dumps(
+            {
+                "prompt": full_prompt,
+                "n_predict": 1024,
+                "temperature": self.temperature,
+                "top_k": self.top_k,
+                "top_p": self.top_p,
+                "repeat_penalty": self.repetition_penalty,
+                "stop": ["<｜hy_place▁holder▁no▁2｜>"],
+            }
+        ).encode()
 
         req = Request(
             f"{self._base_url}/completion",

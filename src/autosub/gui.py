@@ -1,16 +1,19 @@
 """AutoSub GUI — cross-platform desktop application."""
 
+import queue
 import re
 import sys
 import threading
-import queue
 from pathlib import Path
+from typing import ClassVar
 
 import customtkinter as ctk
 from loguru import logger
 
 from autosub.main import main as run_cli
-from autosub.model_manager import MODELS, status as model_status, download as download_model
+from autosub.model_manager import MODELS
+from autosub.model_manager import download as download_model
+from autosub.model_manager import status as model_status
 
 # ── Appearance ──────────────────────────────────────────────────────────
 
@@ -71,7 +74,7 @@ def _strip_ansi(text: str) -> str:
 class App(ctk.CTk):
     """AutoSub GUI."""
 
-    STAGE_LABELS = [
+    STAGE_LABELS: ClassVar[list[str]] = [
         "Audio Extraction",
         "Voice Activity Detection",
         "Speech Recognition (ASR)",
@@ -117,21 +120,29 @@ class App(ctk.CTk):
         title_frame.grid_columnconfigure(0, weight=1)
 
         title = ctk.CTkLabel(
-            title_frame, text="AutoSub — Auto Subtitle Generator",
+            title_frame,
+            text="AutoSub — Auto Subtitle Generator",
             font=("Segoe UI", 18, "bold"),
         )
         title.grid(row=0, column=0, sticky="w")
 
         self._models_btn = ctk.CTkButton(
-            title_frame, text="\U0001F4E6 Models", font=FONT,
-            width=100, command=self._open_model_manager,
+            title_frame,
+            text="\U0001f4e6 Models",
+            font=FONT,
+            width=100,
+            command=self._open_model_manager,
         )
         self._models_btn.grid(row=0, column=1, sticky="e")
 
         # ── Input file ───────────────────────────────────────────────
-        self._add_file_row(1, "Input Video", self.input_path, self._browse_input,
-                           filetypes=[("Video", "*.mp4 *.avi *.mkv *.mov *.wmv"),
-                                      ("All files", "*.*")])
+        self._add_file_row(
+            1,
+            "Input Video",
+            self.input_path,
+            self._browse_input,
+            filetypes=[("Video", "*.mp4 *.avi *.mkv *.mov *.wmv"), ("All files", "*.*")],
+        )
 
         # ── Output dir ───────────────────────────────────────────────
         self._add_dir_row(2, "Output Dir", self.output_dir, self._browse_output)
@@ -145,15 +156,20 @@ class App(ctk.CTk):
         backend_frame.grid_columnconfigure(1, weight=1)
 
         ctk.CTkLabel(backend_frame, text="Backend:", font=FONT).grid(
-            row=0, column=0, padx=(0, 12), sticky="w")
+            row=0, column=0, padx=(0, 12), sticky="w"
+        )
         self._backend_menu = ctk.CTkOptionMenu(
-            backend_frame, values=["llamacpp", "transformers"],
-            variable=self.backend, command=self._on_backend_change,
+            backend_frame,
+            values=["llamacpp", "transformers"],
+            variable=self.backend,
+            command=self._on_backend_change,
         )
         self._backend_menu.grid(row=0, column=1, sticky="w", padx=(0, 12))
 
         self._backend_info = ctk.CTkLabel(
-            backend_frame, text="", font=("Segoe UI", 11),
+            backend_frame,
+            text="",
+            font=("Segoe UI", 11),
         )
         self._backend_info.grid(row=0, column=2, sticky="w")
         self._on_backend_change(self.backend.get())
@@ -161,19 +177,23 @@ class App(ctk.CTk):
         # ── Skip checkboxes ──────────────────────────────────────────
         skip_frame = ctk.CTkFrame(self)
         skip_frame.grid(row=5, column=0, pady=4, padx=20, sticky="ew")
-        for i, (var, label) in enumerate([
-            (self.skip_vad, "Skip VAD"),
-            (self.skip_asr, "Skip ASR"),
-            (self.skip_translate, "Skip Translate"),
-        ]):
+        for i, (var, label) in enumerate(
+            [
+                (self.skip_vad, "Skip VAD"),
+                (self.skip_asr, "Skip ASR"),
+                (self.skip_translate, "Skip Translate"),
+            ]
+        ):
             cb = ctk.CTkCheckBox(skip_frame, text=label, variable=var, font=FONT)
             cb.grid(row=0, column=i, padx=(0, 20), pady=4, sticky="w")
 
         # ── Start button ─────────────────────────────────────────────
         self._start_btn = ctk.CTkButton(
-            self, text="\u25b6  Start Processing",
+            self,
+            text="\u25b6  Start Processing",
             font=("Segoe UI", 14, "bold"),
-            height=40, command=self._toggle_pipeline,
+            height=40,
+            command=self._toggle_pipeline,
         )
         self._start_btn.grid(row=6, column=0, pady=(10, 4), padx=20, sticky="ew")
 
@@ -188,8 +208,10 @@ class App(ctk.CTk):
             f.grid(row=0, column=idx, padx=3, pady=6, sticky="ew")
             f.grid_columnconfigure(0, weight=1)
             lbl = ctk.CTkLabel(
-                f, text=f"{idx+1}. {label}",
-                font=("Segoe UI", 11), anchor="center",
+                f,
+                text=f"{idx + 1}. {label}",
+                font=("Segoe UI", 11),
+                anchor="center",
             )
             lbl.grid(row=0, column=0, padx=4, pady=3, sticky="ew")
             self._stage_labels.append(lbl)
@@ -201,7 +223,10 @@ class App(ctk.CTk):
         log_frame.grid_columnconfigure(0, weight=1)
 
         self._log_text = ctk.CTkTextbox(
-            log_frame, font=FONT_MONO, wrap="word", state="disabled",
+            log_frame,
+            font=FONT_MONO,
+            wrap="word",
+            state="disabled",
         )
         self._log_text.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
 
@@ -214,64 +239,68 @@ class App(ctk.CTk):
         self._status_label.grid(row=0, column=0, sticky="ew")
 
         self._open_srt_btn = ctk.CTkButton(
-            bar, text="Open SRT", font=FONT,
-            state="disabled", command=self._open_srt,
+            bar,
+            text="Open SRT",
+            font=FONT,
+            state="disabled",
+            command=self._open_srt,
         )
         self._open_srt_btn.grid(row=0, column=1, padx=(4, 0))
 
         self._open_dir_btn = ctk.CTkButton(
-            bar, text="Open Output Dir", font=FONT,
-            state="disabled", command=self._open_output_dir,
+            bar,
+            text="Open Output Dir",
+            font=FONT,
+            state="disabled",
+            command=self._open_output_dir,
         )
         self._open_dir_btn.grid(row=0, column=2, padx=(4, 0))
 
     # ── Helper: file row ─────────────────────────────────────────────
 
-    def _add_file_row(self, row: int, label: str, var: ctk.StringVar,
-                      command, filetypes) -> None:
+    def _add_file_row(self, row: int, label: str, var: ctk.StringVar, command, filetypes) -> None:
         f = ctk.CTkFrame(self)
         f.grid(row=row, column=0, pady=4, padx=20, sticky="ew")
         f.grid_columnconfigure(1, weight=1)
         ctk.CTkLabel(f, text=f"{label}:", font=FONT, width=90, anchor="w").grid(
-            row=0, column=0, padx=(0, 8), sticky="w")
-        ctk.CTkEntry(f, textvariable=var, font=FONT).grid(
-            row=0, column=1, sticky="ew", padx=(0, 6))
-        ctk.CTkButton(f, text="Browse", font=FONT, width=80, command=command).grid(
-            row=0, column=2)
+            row=0, column=0, padx=(0, 8), sticky="w"
+        )
+        ctk.CTkEntry(f, textvariable=var, font=FONT).grid(row=0, column=1, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(f, text="Browse", font=FONT, width=80, command=command).grid(row=0, column=2)
 
-    def _add_dir_row(self, row: int, label: str, var: ctk.StringVar,
-                     command) -> None:
+    def _add_dir_row(self, row: int, label: str, var: ctk.StringVar, command) -> None:
         f = ctk.CTkFrame(self)
         f.grid(row=row, column=0, pady=4, padx=20, sticky="ew")
         f.grid_columnconfigure(1, weight=1)
         ctk.CTkLabel(f, text=f"{label}:", font=FONT, width=90, anchor="w").grid(
-            row=0, column=0, padx=(0, 8), sticky="w")
-        ctk.CTkEntry(f, textvariable=var, font=FONT).grid(
-            row=0, column=1, sticky="ew", padx=(0, 6))
-        ctk.CTkButton(f, text="Browse", font=FONT, width=80, command=command).grid(
-            row=0, column=2)
+            row=0, column=0, padx=(0, 8), sticky="w"
+        )
+        ctk.CTkEntry(f, textvariable=var, font=FONT).grid(row=0, column=1, sticky="ew", padx=(0, 6))
+        ctk.CTkButton(f, text="Browse", font=FONT, width=80, command=command).grid(row=0, column=2)
 
     # ── Browse callbacks ─────────────────────────────────────────────
 
     def _browse_input(self) -> None:
         from tkinter import filedialog
+
         path = filedialog.askopenfilename(
             title="Select video file",
-            filetypes=[("Video files", "*.mp4 *.avi *.mkv *.mov *.wmv"),
-                       ("All files", "*.*")],
+            filetypes=[("Video files", "*.mp4 *.avi *.mkv *.mov *.wmv"), ("All files", "*.*")],
         )
         if path:
             self.input_path.set(path)
 
     def _browse_output(self) -> None:
         from tkinter import filedialog
+
         path = filedialog.askdirectory(title="Select output directory")
         if path:
             self.output_dir.set(path)
 
     def _on_backend_change(self, value: str) -> None:
         self._backend_info.configure(
-            text="(GGUF, ~1.1 GB, recommended)" if value == "llamacpp"
+            text="(GGUF, ~1.1 GB, recommended)"
+            if value == "llamacpp"
             else "(Transformers, ~3.8 GB, slower)"
         )
 
@@ -302,7 +331,7 @@ class App(ctk.CTk):
         # Redirect stderr (loguru output) to GUI
         self._capture = LogCapture()
         self._old_stderr = sys.stderr
-        sys.stderr = self._capture  # type: ignore[assignment]
+        sys.stderr = self._capture
 
         # Run in thread
         self._worker = threading.Thread(target=self._run_pipeline, daemon=True)
@@ -317,8 +346,10 @@ class App(ctk.CTk):
             sys.argv = [
                 "autosub",
                 self.input_path.get(),
-                "--output-dir", self.output_dir.get(),
-                "--backend", self.backend.get(),
+                "--output-dir",
+                self.output_dir.get(),
+                "--backend",
+                self.backend.get(),
             ]
             if self.backend.get() == "llamacpp":
                 sys.argv[1:1] = []  # gguf-model has a default, no need to force
@@ -344,7 +375,7 @@ class App(ctk.CTk):
     def _on_complete(self) -> None:
         # Restore stderr
         if self._old_stderr is not None:
-            sys.stderr = self._old_stderr  # type: ignore[assignment]
+            sys.stderr = self._old_stderr
             self._old_stderr = None
 
         self._start_btn.configure(state="normal", text="\u25b6  Start Processing")
@@ -413,7 +444,7 @@ class App(ctk.CTk):
                     lbl.configure(text_color=("white", "#90CAF9"))
 
         if "Done." in text or "\u2713 Subtitles" in text:
-            for idx, lbl in enumerate(self._stage_labels):
+            for _idx, lbl in enumerate(self._stage_labels):
                 lbl.master.configure(fg_color=("#2E7D32", "#388E3C"))
                 lbl.configure(text_color=("white", "#A5D6A7"))
             self._status_label.configure(text="Completed successfully!")
@@ -427,6 +458,7 @@ class App(ctk.CTk):
     def _on_close(self) -> None:
         if self.running:
             from tkinter.messagebox import askyesno
+
             if not askyesno("Quit", "Processing is in progress. Quit anyway?"):
                 return
         self.destroy()
@@ -437,12 +469,15 @@ class App(ctk.CTk):
         if self._output_srt and Path(self._output_srt).exists():
             if sys.platform == "darwin":
                 import subprocess
+
                 subprocess.run(["open", self._output_srt], check=False)
             elif sys.platform == "win32":
                 import subprocess
-                subprocess.run(["start", self._output_srt], shell=True, check=False)
+
+                subprocess.run(["start", self._output_srt], shell=True, check=False)  # nosec B602
             else:
                 import subprocess
+
                 subprocess.run(["xdg-open", self._output_srt], check=False)
 
     def _open_output_dir(self) -> None:
@@ -450,12 +485,15 @@ class App(ctk.CTk):
         if d.exists():
             if sys.platform == "darwin":
                 import subprocess
+
                 subprocess.run(["open", str(d)], check=False)
             elif sys.platform == "win32":
                 import subprocess
+
                 subprocess.run(["explorer", str(d)], check=False)
             else:
                 import subprocess
+
                 subprocess.run(["xdg-open", str(d)], check=False)
 
     def _log(self, text: str) -> None:
@@ -488,7 +526,8 @@ class ModelManagerDialog(ctk.CTkToplevel):
 
         # ── Header ─────────────────────────────────────────────────
         header = ctk.CTkLabel(
-            self, text="Download Required Models",
+            self,
+            text="Download Required Models",
             font=("Segoe UI", 15, "bold"),
         )
         header.grid(row=0, column=0, pady=(14, 6), padx=20, sticky="w")
@@ -506,25 +545,35 @@ class ModelManagerDialog(ctk.CTkToplevel):
             row_frame.grid_columnconfigure(1, weight=1)
 
             name_lbl = ctk.CTkLabel(
-                row_frame, text=info["name"],
-                font=("Segoe UI", 13, "bold"), anchor="w",
+                row_frame,
+                text=info["name"],
+                font=("Segoe UI", 13, "bold"),
+                anchor="w",
             )
             name_lbl.grid(row=0, column=0, padx=(10, 6), pady=6, sticky="w")
 
             desc_lbl = ctk.CTkLabel(
-                row_frame, text=info["description"],
-                font=("Segoe UI", 11), anchor="w",
+                row_frame,
+                text=info["description"],
+                font=("Segoe UI", 11),
+                anchor="w",
             )
             desc_lbl.grid(row=0, column=1, padx=6, pady=6, sticky="w")
 
             status_lbl = ctk.CTkLabel(
-                row_frame, text="", font=("Segoe UI", 11, "bold"), anchor="e",
+                row_frame,
+                text="",
+                font=("Segoe UI", 11, "bold"),
+                anchor="e",
             )
             status_lbl.grid(row=0, column=2, padx=6, pady=6, sticky="e")
 
             dl_btn = ctk.CTkButton(
-                row_frame, text="Download", font=FONT,
-                width=90, height=28,
+                row_frame,
+                text="Download",
+                font=FONT,
+                width=90,
+                height=28,
                 command=lambda k=key: self._download_one(k),
             )
             dl_btn.grid(row=0, column=3, padx=(6, 10), pady=6)
@@ -541,7 +590,9 @@ class ModelManagerDialog(ctk.CTkToplevel):
         bar.grid_columnconfigure(1, weight=1)
 
         self._dl_all_btn = ctk.CTkButton(
-            bar, text="Download All", font=FONT,
+            bar,
+            text="Download All",
+            font=FONT,
             command=self._download_all,
         )
         self._dl_all_btn.grid(row=0, column=0, padx=(0, 12), pady=6, sticky="w")
@@ -551,12 +602,18 @@ class ModelManagerDialog(ctk.CTkToplevel):
         self._prog_bar.set(0)
 
         self._prog_label = ctk.CTkLabel(
-            bar, text="", font=("Segoe UI", 11), anchor="e",
+            bar,
+            text="",
+            font=("Segoe UI", 11),
+            anchor="e",
         )
         self._prog_label.grid(row=0, column=2, padx=6, pady=6, sticky="e")
 
         close_btn = ctk.CTkButton(
-            bar, text="Close", font=FONT, command=self.destroy,
+            bar,
+            text="Close",
+            font=FONT,
+            command=self.destroy,
         )
         close_btn.grid(row=0, column=3, padx=(6, 0), pady=6)
 
@@ -567,7 +624,10 @@ class ModelManagerDialog(ctk.CTkToplevel):
         log_frame.grid_columnconfigure(0, weight=1)
 
         self._log_text = ctk.CTkTextbox(
-            log_frame, font=FONT_MONO, wrap="word", state="disabled",
+            log_frame,
+            font=FONT_MONO,
+            wrap="word",
+            state="disabled",
             height=120,
         )
         self._log_text.grid(row=0, column=0, sticky="nsew", padx=2, pady=2)
@@ -581,17 +641,20 @@ class ModelManagerDialog(ctk.CTkToplevel):
             st = model_status(key)
             if st == "ok":
                 row["status_lbl"].configure(
-                    text="\u2713 Downloaded", text_color="#4CAF50",
+                    text="\u2713 Downloaded",
+                    text_color="#4CAF50",
                 )
                 row["dl_btn"].configure(state="disabled", text="\u2713")
             elif st == "partial":
                 row["status_lbl"].configure(
-                    text="Partial", text_color="#FF9800",
+                    text="Partial",
+                    text_color="#FF9800",
                 )
                 row["dl_btn"].configure(state="normal", text="Resume")
             else:
                 row["status_lbl"].configure(
-                    text="Not Downloaded", text_color="#757575",
+                    text="Not Downloaded",
+                    text_color="#757575",
                 )
                 row["dl_btn"].configure(state="normal", text="Download")
 
@@ -626,9 +689,12 @@ class ModelManagerDialog(ctk.CTkToplevel):
             keys = list(MODELS)
             failed = None
             for key in keys:
-                self.after(0, lambda k=key: self._prog_label.configure(
-                    text=f"Downloading {MODELS[k]['name']}..."
-                ))
+                self.after(
+                    0,
+                    lambda k=key: self._prog_label.configure(
+                        text=f"Downloading {MODELS[k]['name']}..."
+                    ),
+                )
                 try:
                     download_model(key, self._append_log, self._set_progress)
                 except Exception as exc:
@@ -660,9 +726,7 @@ class ModelManagerDialog(ctk.CTkToplevel):
 
     def _set_progress(self, pct: float) -> None:
         self.after(0, lambda: self._prog_bar.set(pct / 100))
-        self.after(0, lambda: self._prog_label.configure(
-            text=f"{pct:.0f}%"
-        ))
+        self.after(0, lambda: self._prog_label.configure(text=f"{pct:.0f}%"))
 
     def _set_buttons_disabled(self, disabled: bool) -> None:
         st = "disabled" if disabled else "normal"

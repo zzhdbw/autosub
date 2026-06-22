@@ -1,5 +1,4 @@
 import os
-
 from pathlib import Path
 
 import numpy as np
@@ -22,7 +21,7 @@ class SenseVoiceASR(BaseASR):
         device: str = "cpu",
         model_dir: str | None = None,
     ):
-        if not model_dir.exists():
+        if model_dir is None or not Path(model_dir).exists():
             raise FileNotFoundError(
                 f"SenseVoiceSmall ONNX model not found at {model_dir}. "
                 f"Place it there or set model_dir to the correct path."
@@ -48,6 +47,7 @@ class SenseVoiceASR(BaseASR):
         audio_path: str,
         chunk_duration_ms: int = 10000,
         vad_segments: list[dict] | None = None,
+        **kwargs,
     ) -> list[dict]:
         """Run ASR on audio.
 
@@ -85,9 +85,7 @@ class SenseVoiceASR(BaseASR):
 
             text = self._run_asr(chunk, sr)
             if text:
-                logger.info(
-                    "[ASR] {}/{} {}ms → {}", idx, total, seg["end"] - seg["start"], text
-                )
+                logger.info("[ASR] {}/{} {}ms → {}", idx, total, seg["end"] - seg["start"], text)
                 segments.append(
                     {
                         "start": seg["start"],

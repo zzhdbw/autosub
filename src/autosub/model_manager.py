@@ -4,8 +4,8 @@ Uses direct HTTP downloads (``requests``) — no subprocess / CLI dependency,
 works reliably inside PyInstaller bundles.
 """
 
+from collections.abc import Callable as _Callable
 from pathlib import Path as _Path
-from typing import Callable as _Callable
 
 import requests as _requests
 
@@ -37,11 +37,13 @@ MODELS: dict[str, dict] = {
         "name": "Silero VAD",
         "description": "Voice Activity Detection (2.2 MB)",
         "dest": MODEL_DIR / "silero_vad" / "silero_vad.onnx",
-        "files": [{
-            "url": "https://github.com/snakers4/silero-vad/raw/master/"
-                   "src/site-packages/silero_vad/data/silero_vad.onnx",
-            "dest": MODEL_DIR / "silero_vad" / "silero_vad.onnx",
-        }],
+        "files": [
+            {
+                "url": "https://github.com/snakers4/silero-vad/raw/master/"
+                "src/site-packages/silero_vad/data/silero_vad.onnx",
+                "dest": MODEL_DIR / "silero_vad" / "silero_vad.onnx",
+            }
+        ],
     },
     "sensevoice": {
         "name": "SenseVoiceSmall (ASR)",
@@ -53,14 +55,16 @@ MODELS: dict[str, dict] = {
         "name": "Hy-MT2-1.8B GGUF (Translate)",
         "description": "Japanese\u2192Chinese Translation (440 MB, STQ 1.25-bit)",
         "dest": MODEL_DIR / "Hy-MT2-1.8B-1.25Bit-GGUF" / "Hy-MT2-1.8B-1.25Bit.gguf",
-        "files": [{
-            "url": _MS_URL.format(
-                model="Tencent-Hunyuan/Hy-MT2-1.8B-1.25Bit-GGUF",
-                branch="master",
-                file="Hy-MT2-1.8B-1.25Bit.gguf",
-            ),
-            "dest": MODEL_DIR / "Hy-MT2-1.8B-1.25Bit-GGUF" / "Hy-MT2-1.8B-1.25Bit.gguf",
-        }],
+        "files": [
+            {
+                "url": _MS_URL.format(
+                    model="Tencent-Hunyuan/Hy-MT2-1.8B-1.25Bit-GGUF",
+                    branch="master",
+                    file="Hy-MT2-1.8B-1.25Bit.gguf",
+                ),
+                "dest": MODEL_DIR / "Hy-MT2-1.8B-1.25Bit-GGUF" / "Hy-MT2-1.8B-1.25Bit.gguf",
+            }
+        ],
     },
 }
 
@@ -109,18 +113,22 @@ def _resolve_sensevoice_files(dest_dir: _Path) -> list[dict]:
     """Build the file list for SenseVoiceSmall-onnx download."""
     files = []
     for f in SENSEVOICE_FILES:
-        files.append({
-            "url": _MS_URL.format(
-                model="iic/SenseVoiceSmall-onnx",
-                branch=f["branch"],
-                file=f["file"],
-            ),
-            "dest": dest_dir / f["file"],
-        })
-    files.append({
-        "url": SENSEVOICE_BPE["url"],
-        "dest": dest_dir / SENSEVOICE_BPE["dest"],
-    })
+        files.append(
+            {
+                "url": _MS_URL.format(
+                    model="iic/SenseVoiceSmall-onnx",
+                    branch=f["branch"],
+                    file=f["file"],
+                ),
+                "dest": dest_dir / f["file"],
+            }
+        )
+    files.append(
+        {
+            "url": SENSEVOICE_BPE["url"],
+            "dest": dest_dir / SENSEVOICE_BPE["dest"],
+        }
+    )
     return files
 
 
@@ -153,13 +161,16 @@ def _download_sensevoice(
         f["dest"].parent.mkdir(parents=True, exist_ok=True)
         log_cb(f"  [{i + 1}/{len(files)}] {fname} ...\n")
 
-        def _local_prog(pct: float) -> None:
-            file_done = int(pct / 100 * sizes[i]) if sizes[i] > 0 else 0
-            cumulative = downloaded + file_done
-            if total_bytes > 0:
-                prog_cb(cumulative / total_bytes * 100)
+        def _make_prog(idx: int, downloaded_before: int) -> _Callable[[float], None]:
+            def _local_prog(pct: float) -> None:
+                file_done = int(pct / 100 * sizes[idx]) if sizes[idx] > 0 else 0
+                cumulative = downloaded_before + file_done
+                if total_bytes > 0:
+                    prog_cb(cumulative / total_bytes * 100)
 
-        _download_file(f["url"], f["dest"], log_cb, _local_prog)
+            return _local_prog
+
+        _download_file(f["url"], f["dest"], log_cb, _make_prog(i, downloaded))
         downloaded += sizes[i]
 
     prog_cb(100)
@@ -192,7 +203,7 @@ def _download_file(
     temp_path.rename(dest)
 
 
-def _fmt_size(n: int) -> str:
+def _fmt_size(n: float) -> str:
     for unit in ("B", "KB", "MB", "GB"):
         if n < 1024:
             return f"{n:.1f} {unit}"
